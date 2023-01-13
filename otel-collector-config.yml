@@ -1,0 +1,57 @@
+receivers:
+  otlp:
+    protocols:
+     http:
+       endpoint: 0.0.0.0:4318
+     grpc:
+       endpoint: 0.0.0.0:4317
+       
+  prometheus:
+    config:
+      scrape_configs:
+          - job_name: 'otel-collector'
+            scrape_interval: 5s
+            static_configs:
+              - targets: ['0.0.0.0:8888']
+
+exporters:
+  jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+  logging:
+  
+  # zipkin:
+  #   endpoint: "http://zipkin:9411/api/v2/spans"
+  
+    # Data sources: metrics
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: "default"
+
+processors:
+  batch:
+
+extensions:
+  health_check:
+  pprof:
+  zpages:
+
+service:
+  telemetry:
+    logs:
+      level: "debug"
+
+  extensions: [pprof, zpages, health_check]
+
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      # exporters: [zipkin, logging]
+      exporters: [jaeger, logging]
+
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [batch]
+      exporters: [logging, prometheus]
