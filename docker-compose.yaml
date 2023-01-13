@@ -38,6 +38,23 @@ services:
   #   ports:
   #     - 9411:9411
 
+  producer:
+    image: ddosify/ddosify
+    #command: ["-t", ""]
+    command: >
+      ls -la
+      # -t http://backend:5000/books
+      # -d 10800
+      # -l linear
+    depends_on:
+      - otel-collector
+
+  backed:
+    build:
+      context: ./backend-book
+    ports:
+      - "5000:5000"
+
   otel-collector:
     image: otel/opentelemetry-collector:latest
     command: ["--config=/etc/otel-collector-config.yml"]

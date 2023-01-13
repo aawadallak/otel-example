@@ -50,7 +50,7 @@ func initProvider(ctx context.Context) (func(context.Context) error, error) {
 		grpc.WithBlock(),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
+		return nil, fmt.Errorf("failed to create gRPC connection to collecto: %w", err)
 	}
 
 	// Set up a trace exporter
@@ -79,7 +79,7 @@ func initProvider(ctx context.Context) (func(context.Context) error, error) {
 
 	provider := sdkmetric.NewMeterProvider(
 		sdkmetric.WithResource(res),
-		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExporter, sdkmetric.WithInterval(time.Second))),
+		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExporter)),
 	)
 
 	global.SetMeterProvider(provider)
