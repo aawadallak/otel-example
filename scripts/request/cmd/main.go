@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	req, err := http.NewRequest(http.MethodGet, "http://backend:5000/books", nil)
+	req, err := http.NewRequest(http.MethodGet, "http://backend-parent:5000/books", nil)
 	if err != nil {
 		log.Println("http.NewRequest() returnd error:", err.Error())
 		return

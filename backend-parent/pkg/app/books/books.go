@@ -1,6 +1,7 @@
 package books
 
 import (
+	"log"
 	"net/http"
 
 	"go.opentelemetry.io/otel"
@@ -11,5 +12,7 @@ func GetBooks(w http.ResponseWriter, r *http.Request) {
 	props := otel.GetTextMapPropagator()
 	props.Inject(r.Context(), propagation.HeaderCarrier(w.Header()))
 
-	http.Redirect(w, r, "", http.StatusSeeOther)
+	log.Println("opaaa")
+
+	http.Redirect(w, r, "http://backend-child:5001/books", http.StatusSeeOther)
 }
