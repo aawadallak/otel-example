@@ -114,12 +114,12 @@ func tracingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		props := otel.GetTextMapPropagator()
 
-		ctx := props.Extract(r.Context(), propagation.HeaderCarrier(w.Header()))
-
+		ctx := props.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 		ctx, span := otel.Tracer("tracing-middleware").Start(ctx, r.RequestURI)
-		defer span.End()
 
 		next.ServeHTTP(w, r.WithContext(ctx))
+
+		span.End()
 	})
 }
 

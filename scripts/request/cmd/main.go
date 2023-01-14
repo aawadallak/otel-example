@@ -23,6 +23,8 @@ func main() {
 				return
 			}
 
+			defer res.Body.Close()
+
 			if res.StatusCode != 200 {
 				log.Println("fail to request backend")
 				return

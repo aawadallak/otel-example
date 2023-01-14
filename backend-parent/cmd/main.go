@@ -31,18 +31,13 @@ func initProvider(ctx context.Context) (func(context.Context) error, error) {
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
 			// the service name used to display traces in backends
-			semconv.ServiceNameKey.String("test-service"),
+			semconv.ServiceNameKey.String("backend-parent"),
 		),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
-	// If the OpenTelemetry Collector is running on a local cluster (minikube or
-	// microk8s), it should be accessible through the NodePort service at the
-	// `localhost:30080` endpoint. Otherwise, replace `localhost` with the
-	// endpoint of your cluster. If you run the app inside k8s, then you can
-	// probably connect directly to the service through dns.
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, "otel-collector:4317",
@@ -114,12 +109,12 @@ func tracingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		props := otel.GetTextMapPropagator()
 
-		ctx := props.Extract(r.Context(), propagation.HeaderCarrier(w.Header()))
-
-		ctx, span := otel.Tracer("tarcing-middleware").Start(ctx, r.RequestURI)
-		defer span.End()
+		ctx := props.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+		ctx, span := otel.Tracer("tracing-middleware").Start(ctx, r.RequestURI)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
+
+		span.End()
 	})
 }
 
