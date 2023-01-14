@@ -1,5 +1,6 @@
 go 1.19
 
 use (
-    "./backend-book"
+    "./backend-parent"
+    "./scripts/request"
 )

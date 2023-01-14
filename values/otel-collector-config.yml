@@ -24,7 +24,7 @@ exporters:
   # zipkin:
   #   endpoint: "http://zipkin:9411/api/v2/spans"
   
-    # Data sources: metrics
+  # Data sources: metrics
   prometheus:
     endpoint: "0.0.0.0:8889"
     namespace: "default"
@@ -48,7 +48,6 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      # exporters: [zipkin, logging]
       exporters: [jaeger, logging]
 
     metrics:

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -30,7 +31,7 @@ func initProvider(ctx context.Context) (func(context.Context) error, error) {
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
 			// the service name used to display traces in backends
-			semconv.ServiceNameKey.String("test-service"),
+			semconv.ServiceNameKey.String("backend-child"),
 		),
 	)
 	if err != nil {
@@ -44,13 +45,12 @@ func initProvider(ctx context.Context) (func(context.Context) error, error) {
 	// probably connect directly to the service through dns.
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, "localhost:4317",
+	conn, err := grpc.DialContext(ctx, "otel-collector:4317",
 		// Note the use of insecure transport here. TLS is recommended in production.
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create gRPC connection to collecto: %w", err)
+		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
 	}
 
 	// Set up a trace exporter
@@ -93,10 +93,10 @@ func metricMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		meter := global.Meter("metric_middleware")
+		meter := global.Meter("metric_backend_child")
 
 		counter, err := meter.SyncInt64().Counter(
-			"test_my_counter",
+			"simple.counter",
 			instrument.WithDescription("Just a test counter"),
 		)
 		if err != nil {
@@ -112,9 +112,11 @@ func metricMiddleware(next http.Handler) http.Handler {
 // HTTP middleware setting a value on the request context
 func tracingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tracer := otel.Tracer("test-tracer")
+		props := otel.GetTextMapPropagator()
 
-		ctx, span := tracer.Start(r.Context(), r.RequestURI)
+		ctx := props.Extract(r.Context(), propagation.HeaderCarrier(w.Header()))
+
+		ctx, span := otel.Tracer("tracing-middleware").Start(ctx, r.RequestURI)
 		defer span.End()
 
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -135,11 +137,12 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.AllowContentType("application/json"))
+	r.Use(middleware.Logger)
+
 	r.Use(tracingMiddleware)
 	r.Use(metricMiddleware)
-	r.Use(middleware.Logger)
 
 	r.Get("/books", books.GetBooks)
 
-	http.ListenAndServe(":5000", r)
+	log.Fatalln(http.ListenAndServe(":5000", r))
 }
