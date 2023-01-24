@@ -4,18 +4,19 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 )
 
-const backendChildUrl = "http://backend-child:5001/books"
+var backendURL = os.Getenv("URL_BACKEND_CHILD")
 
 func GetBooks(w http.ResponseWriter, r *http.Request) {
 	props := otel.GetTextMapPropagator()
 	props.Inject(r.Context(), propagation.HeaderCarrier(r.Header))
 
-	req, err := http.NewRequest(http.MethodGet, backendChildUrl, nil)
+	req, err := http.NewRequest(http.MethodGet, backendURL+"/books", nil)
 	if err != nil {
 		log.Println("http.NewRequest() returnd error:", err.Error())
 		return

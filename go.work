@@ -1,6 +1,7 @@
 go 1.19
 
 use (
+    "./backend-child"
     "./backend-parent"
     "./scripts/request"
 )

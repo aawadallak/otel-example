@@ -1,4 +1,4 @@
-module github.com/aawadallak/otlp-example
+module github.com/aawadallak/otlp-example/backend-child
 
 go 1.19
 

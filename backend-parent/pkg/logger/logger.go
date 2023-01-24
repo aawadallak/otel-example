@@ -5,11 +5,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// var (
-// 	global *logger
-// 	once   sync.Once
-// )
-
 type (
 	Logger interface {
 		Infof(args ...any)

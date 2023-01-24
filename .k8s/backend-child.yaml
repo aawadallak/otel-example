@@ -1,0 +1,23 @@
+appVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apps.k8s.io.deployment/backend-child
+spec:
+  selector:
+    matchLabels:
+      app: backend-child
+  template:
+    metadata:
+      labels:
+        app: backend-child
+  spec:
+    containers:
+      - name: backend-child
+        image: registry.otlp.example/backend-child
+        imagePullPolicy: Never
+        resources: 
+          limit:
+             memory: "128Mi"
+             cpu: "500m"
+        ports: 
+          - containerPort: 8080

@@ -3,11 +3,14 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
+var backendURL = os.Getenv("URL_BACKEND_PARENT")
+
 func main() {
-	req, err := http.NewRequest(http.MethodGet, "http://backend-parent:5000/books", nil)
+	req, err := http.NewRequest(http.MethodGet, backendURL+"/books", nil)
 	if err != nil {
 		log.Println("http.NewRequest() returnd error:", err.Error())
 		return

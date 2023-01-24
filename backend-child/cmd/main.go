@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
-	"github.com/aawadallak/otlp-example/pkg/app/books"
+	"github.com/aawadallak/otlp-example/backend-child/pkg/app/books"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"go.opentelemetry.io/otel"
@@ -24,6 +25,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+var otlpExporterAddr = os.Getenv("OTLP_EXPORTER_ADDR")
 
 // Initializes an OTLP exporter, and configures the corresponding trace and
 // metric providers.
@@ -45,9 +48,10 @@ func initProvider(ctx context.Context) (func(context.Context) error, error) {
 	// probably connect directly to the service through dns.
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, "otel-collector:4317",
+	conn, err := grpc.DialContext(ctx, otlpExporterAddr,
 		// Note the use of insecure transport here. TLS is recommended in production.
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
@@ -104,7 +108,7 @@ func metricMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Increment the counter.
-		counter.Add(ctx, 1, attribute.String("foo", "bar"))
+		counter.Add(ctx, -10, attribute.String("foo", "bar"))
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -135,14 +139,14 @@ func main() {
 	defer shutdown(ctx)
 
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.AllowContentType("application/json"))
-	r.Use(middleware.Logger)
 
 	r.Use(tracingMiddleware)
 	r.Use(metricMiddleware)
 
 	r.Get("/books", books.GetBooks)
 
-	log.Fatalln(http.ListenAndServe(":5001", r))
+	log.Fatalln(http.ListenAndServe(":8080", r))
 }

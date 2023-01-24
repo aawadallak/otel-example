@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otlp-backend
+spec:
+  selector:
+    matchLabels:
+      app: otlp-backend
+  template:
+    metadata:
+      labels:
+        app: otlp-backend
+    spec:
+      containers:
+      - name: backend-parent
+        image: registry.otlp.example/backend-parent
+        imagePullPolicy: Never
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8080
+
+      - name: script-request
+        image: registry.otlp.example/script-request
+        imagePullPolicy: Never
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+
+
