@@ -1,0 +1,124 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: otlp-config
+  namespace: otlp
+data:
+  OTLP_EXPORTER_ADDR: "oap-signoz-otel-collector:4317"
+  URL_BACKEND_CHILD: "http://otlp-backend-child:5001"
+  URL_BACKEND_PARENT: "http://otlp-backend:5000"
+
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  name: otlp-backend
+spec:
+  selector:
+    app: otlp-backend
+  type: ClusterIP
+  ports:
+  - name: otlp-backend
+    protocol: TCP
+    port: 5000
+    targetPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otlp-backend-child
+spec:
+  selector:
+    app: otlp-backend-child
+  type: ClusterIP
+  ports:
+  - name: otlp-backend-child
+    protocol: TCP
+    port: 5001
+    targetPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oap-signoz-otel-collector
+  namespace: otlp
+spec:
+  type: ExternalName
+  externalName: oap-signoz-otel-collector.platform.svc.cluster.local
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otlp-backend
+spec:
+  selector:
+    matchLabels:
+      app: otlp-backend
+  template:
+    metadata:
+      labels:
+        app: otlp-backend
+    spec:
+      containers:
+        - name: backend-parent
+          image: registry.otlp.example/backend-parent
+          imagePullPolicy: Never
+          resources: {}
+          ports:
+          - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: otlp-config
+
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otlp-backend-child
+spec:
+  selector:
+    matchLabels:
+      app: backend-child
+  template:
+    metadata:
+      labels:
+        app: backend-child
+    spec:
+      containers:
+        - name: backend-child
+          image: registry.otlp.example/backend-child
+          imagePullPolicy: Never
+          resources: {}
+          ports: 
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: otlp-config
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: script-request
+spec:
+  selector:
+    matchLabels:
+      app: script-request
+  template:
+    metadata:
+      labels:
+        app: script-request
+    spec:
+      containers:
+        - name: script-request
+          image: registry.otlp.example/script-request
+          resources: {}
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef:
+                name: otlp-config
+
+

@@ -146,5 +146,6 @@ func main() {
 
 	r.Get("/books", books.GetBooks)
 
+	log.Println("Starting backend-parent server")
 	log.Fatalln(http.ListenAndServe(":8080", r))
 }

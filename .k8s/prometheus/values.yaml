@@ -1,0 +1,7 @@
+extraScrapeConfigs: |
+  - job_name: 'otel-collector'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['oap-signoz-otel-collector:8889']
+        labels:
+          group: 'otel'

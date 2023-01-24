@@ -25,7 +25,7 @@ services:
     build:
       context: ../backend-parent
     ports:
-      - "5000:5000"
+      - "5000:8080"
     depends_on:
       - otel-collector
 
@@ -34,7 +34,7 @@ services:
     build:
       context: ../backend-child
     ports:
-      - "5001:5001"
+      - "5001:8080"
     depends_on:
       - backend-parent
 
