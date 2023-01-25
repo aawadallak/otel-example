@@ -21,10 +21,6 @@ exporters:
       insecure: true
   logging:
   
-  # zipkin:
-  #   endpoint: "http://zipkin:9411/api/v2/spans"
-  
-  # Data sources: metrics
   prometheus:
     endpoint: "0.0.0.0:8889"
     namespace: "default"

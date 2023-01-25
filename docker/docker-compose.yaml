@@ -71,7 +71,7 @@ services:
     image: grafana/grafana
     container_name: grafana
     volumes:
-      - grafana-storage:/var/lib/grafana grafana/grafana-enterprise
+      - ./grafana-storage:/var/lib/grafana
     ports:
       - "3000:3000"
     depends_on:
